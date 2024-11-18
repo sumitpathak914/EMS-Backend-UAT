@@ -3,27 +3,22 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require("mongoose");
 const dotenv = require('dotenv');
-const path = require('path');
-const Auth_Router = require('./src/Route/AuthRoute');
+const Auth_Router = require('./src/Route/AuthRoute'); // Adjust path based on structure
+
 dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 5000;
 app.use(bodyParser.json());
 app.use(cors());
 app.use('/Auth/api', Auth_Router);
 app.get('/', (req, res) => {
-    res.send('Server is running on http://localhost:' + PORT);
+    res.send('Server is running!');
 });
-mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(() => {
-        console.log("MongoDB Connected...");
-        app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.error("MongoDB connection error:", err);
-    });
+
+// Database connection (Make sure this runs only once per function execution)
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("MongoDB Connected..."))
+    .catch(err => console.error("MongoDB connection error:", err));
+
+module.exports = app; // Export the app for Vercel to handle
