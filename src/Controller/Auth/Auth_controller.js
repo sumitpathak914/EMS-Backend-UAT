@@ -147,6 +147,7 @@ const loginUser = async (req, res) => {
         // Include additional details such as the image in the response
         const userData = {
             id: user._id,
+            empID: user.empID,
             role,
             name: user.name,
             email: user.email,
