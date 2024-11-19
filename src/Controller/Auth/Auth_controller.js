@@ -10,9 +10,46 @@ const registerUser = async (req, res) => {
     const { name, email, password, role, section, department, position, interview_Date, hiredDate, number} = req.body;
     // const image = req.file ? req.file.path : ''; // Store the file path
 
-    if (!name || !email || !password || !role || !section || !department || !position || !interview_Date || !hiredDate || !number) {
-        return res.status(400).json({ message: 'All fields are required.' });
+    if (!name) {
+        return res.status(400).json({ message: 'Name is required.' });
     }
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required.' });
+    }
+
+    if (!password) {
+        return res.status(400).json({ message: 'Password is required.' });
+    }
+
+    if (!role) {
+        return res.status(400).json({ message: 'Role is required.' });
+    }
+
+    if (!section) {
+        return res.status(400).json({ message: 'Section is required.' });
+    }
+
+    if (!department) {
+        return res.status(400).json({ message: 'Department is required.' });
+    }
+
+    if (!position) {
+        return res.status(400).json({ message: 'Position is required.' });
+    }
+
+    if (!interview_Date) {
+        return res.status(400).json({ message: 'Interview date is required.' });
+    }
+
+    if (!hiredDate) {
+        return res.status(400).json({ message: 'Hired date is required.' });
+    }
+
+    if (!number) {
+        return res.status(400).json({ message: 'Contact number is required.' });
+    }
+
 
     try {
         if (role === 'employee') {
