@@ -11,7 +11,7 @@ const employeeSchema = new mongoose.Schema({
     interview_Date: { type: Date },
     hiredDate: { type: Date },
     number: { type: String },
-    image: { type: String }, // Path to the uploaded file
+    image: { type: String }, 
 });
 
 module.exports = mongoose.model('Employee', employeeSchema);

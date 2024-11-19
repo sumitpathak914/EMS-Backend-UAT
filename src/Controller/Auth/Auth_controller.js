@@ -8,7 +8,7 @@ const SECRET_KEY = 'TechMET@#183';
 // Register User
 const registerUser = async (req, res) => {
     const { name, email, password, role, section, department, position, interview_Date, hiredDate, number } = req.body;
-    const image = req.file ? req.file.path : ''; // Store the file path
+    // const image = req.file ? req.file.path : ''; // Store the file path
 
     if (!name || !email || !password || !role || !section || !department || !position || !interview_Date || !hiredDate || !number) {
         return res.status(400).json({ message: 'All fields are required.' });
@@ -30,7 +30,7 @@ const registerUser = async (req, res) => {
                 interview_Date,
                 hiredDate,
                 number,
-                image
+                // image
             });
 
             return res.status(201).json({ message: 'Employee registered successfully.', data: newEmployee });

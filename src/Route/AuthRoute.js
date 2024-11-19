@@ -6,7 +6,8 @@ const { upload } = require('../multerConfig/multer_Config'); // Ensure the uploa
 const Auth_Router = express.Router();
 
 // Register API
-Auth_Router.post('/register', upload.single('image'), registerUser);
+// Auth_Router.post('/register', upload.single('image'), registerUser);
+Auth_Router.post('/register',  registerUser);
 
 // Login API
 Auth_Router.post('/login', loginUser);
