@@ -18,9 +18,9 @@ const recordAttendance = async (req, res) => {
         }
 
         // Check if WiFi IP matches the registered one
-        // if (wifi_ip !== Store_wifi_ip_1 && wifi_ip !== Store_wifi_ip_2) {
-        //     return res.status(400).json({ statusCode: 400, result: false, message: "You are not connected with TechMET Solution Pvt Ltd Wifi." });
-        // }
+        if (wifi_ip !== Store_wifi_ip_1 && wifi_ip !== Store_wifi_ip_2) {
+            return res.status(400).json({ statusCode: 400, result: false, message: "You are not connected with TechMET Solution Pvt Ltd Wifi." });
+        }
 
         // Check if the employee has already scanned in today
         const existingAttendance = await Attendance.findOne({
