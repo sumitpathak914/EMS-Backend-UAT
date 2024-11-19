@@ -7,7 +7,7 @@ const CryptoJS = require('crypto-js');
 const SECRET_KEY = 'TechMET@#183';
 // Register User
 const registerUser = async (req, res) => {
-    const { name, email, password, role, section, department, position, interview_Date, hiredDate, number } = req.body;
+    const { name, email, password, role, section, department, position, interview_Date, hiredDate, number} = req.body;
     // const image = req.file ? req.file.path : ''; // Store the file path
 
     if (!name || !email || !password || !role || !section || !department || !position || !interview_Date || !hiredDate || !number) {

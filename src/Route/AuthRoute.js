@@ -1,6 +1,6 @@
 const express = require('express');
 const { registerUser, loginUser } = require('../Controller/Auth/Auth_controller');
-const { upload } = require('../multerConfig/multer_Config'); // Ensure the upload middleware is imported correctly
+const { upload } = require('../multerConfig/multer_Config'); 
 
 
 const Auth_Router = express.Router();
