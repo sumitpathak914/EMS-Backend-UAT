@@ -60,7 +60,7 @@ const recordAttendance = async (req, res) => {
             });
 
             await punchIn.save();
-            return res.status(200).json({ statusCode: 200, result: false, message: "Punch-in recorded successfully", attendance: punchIn });
+            return res.status(200).json({ statusCode: 200, result: true, message: "Punch-in recorded successfully", attendance: punchIn });
         }
     } catch (error) {
         console.error(error);
