@@ -7,7 +7,8 @@ const recordAttendance = async (req, res) => {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
 
         // Check if the employee exists
-        const Store_wifi_ip = "192.168.1.22";
+        const Store_wifi_ip_1 = "192.168.1.22";
+        const Store_wifi_ip_2 = "192.168.1.13";
         const employee = await Employee.findOne({ empID: emp_id });
         if (QrMsg !== "Attendance") {
             return res.status(404).json({ statusCode: 404, result: false, message: "QR Code is not Match" });
@@ -17,8 +18,8 @@ const recordAttendance = async (req, res) => {
         }
 
         // Check if WiFi IP matches the registered one
-        if (Store_wifi_ip !== wifi_ip) {
-            return res.status(400).json({ statusCode: 400, result: false, message: "You are not connect with TechMET Solution pvt ltd Wifi." });
+        if (wifi_ip !== Store_wifi_ip_1 && wifi_ip !== Store_wifi_ip_2) {
+            return res.status(400).json({ statusCode: 400, result: false, message: "You are not connected with TechMET Solution Pvt Ltd Wifi." });
         }
 
         // Check if the employee has already scanned in today
