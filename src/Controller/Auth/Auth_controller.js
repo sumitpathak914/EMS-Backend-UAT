@@ -7,56 +7,33 @@ const CryptoJS = require('crypto-js');
 const SECRET_KEY = 'TechMET@#183';
 // Register User
 const registerUser = async (req, res) => {
-    const { name, email, password, role, section, department, position, interview_Date, hiredDate, number} = req.body;
-    // const image = req.file ? req.file.path : ''; // Store the file path
+    const { name, email, password, role, section, department, position, interview_Date, hiredDate, number } = req.body;
 
-    if (!name) {
-        return res.status(400).json({ message: 'Name is required.' });
-    }
-
-    if (!email) {
-        return res.status(400).json({ message: 'Email is required.' });
-    }
-
-    if (!password) {
-        return res.status(400).json({ message: 'Password is required.' });
-    }
-
-    if (!role) {
-        return res.status(400).json({ message: 'Role is required.' });
-    }
-
-    if (!section) {
-        return res.status(400).json({ message: 'Section is required.' });
-    }
-
-    if (!department) {
-        return res.status(400).json({ message: 'Department is required.' });
-    }
-
-    if (!position) {
-        return res.status(400).json({ message: 'Position is required.' });
-    }
-
-    if (!interview_Date) {
-        return res.status(400).json({ message: 'Interview date is required.' });
-    }
-
-    if (!hiredDate) {
-        return res.status(400).json({ message: 'Hired date is required.' });
-    }
-
-    if (!number) {
-        return res.status(400).json({ message: 'Contact number is required.' });
-    }
-
+    // Validation checks
+    if (!name) return res.status(400).json({ message: 'Name is required.' });
+    if (!email) return res.status(400).json({ message: 'Email is required.' });
+    if (!password) return res.status(400).json({ message: 'Password is required.' });
+    if (!role) return res.status(400).json({ message: 'Role is required.' });
+    if (!section) return res.status(400).json({ message: 'Section is required.' });
+    if (!department) return res.status(400).json({ message: 'Department is required.' });
+    if (!position) return res.status(400).json({ message: 'Position is required.' });
+    if (!interview_Date) return res.status(400).json({ message: 'Interview date is required.' });
+    if (!hiredDate) return res.status(400).json({ message: 'Hired date is required.' });
+    if (!number) return res.status(400).json({ message: 'Contact number is required.' });
 
     try {
         if (role === 'employee') {
+            // Check if employee already exists
             const exists = await Employee.findOne({ email });
             if (exists) return res.status(400).json({ message: 'Employee already exists.' });
 
+            // Generate the next incremental Employee ID
+            const lastEmployee = await Employee.findOne().sort({ empID: -1 }); // Get the last employee by empID
+            const nextEmpID = lastEmployee ? lastEmployee.empID + 1 : 1; // Increment or start at 1
+
+            // Create new employee
             const newEmployee = await Employee.create({
+                empID: nextEmpID,
                 name,
                 email,
                 password,
@@ -70,14 +47,18 @@ const registerUser = async (req, res) => {
                 // image
             });
 
-            return res.status(201).json({ message: 'Employee registered successfully.', data: newEmployee });
+            return res.status(201).json({
+                message: 'Employee registered successfully.',
+                data: newEmployee,
+            });
         } else {
             return res.status(400).json({ message: 'Invalid role.' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error.', error: error.message });
+        return res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };
+
 
 // Login User
 // const loginUser = async (req, res) => {
