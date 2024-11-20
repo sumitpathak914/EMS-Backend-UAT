@@ -19,7 +19,7 @@ const recordAttendance = async (req, res) => {
 
         // Check if WiFi IP matches the registered one
         if (wifi_ip !== Store_wifi_ip_1 && wifi_ip !== Store_wifi_ip_2) {
-            return res.status(400).json({ statusCode: 400, result: false, message: "You are not connected with TechMET Solution Pvt Ltd Wifi." });
+            return res.status(400).json({ statusCode: 400, result: false, message: `You are not connected with TechMET Solution Pvt Ltd Wifi.${wifi_ip}` });
         }
 
         // Check if the employee has already scanned in today
@@ -39,8 +39,8 @@ const recordAttendance = async (req, res) => {
                 if (existingAttendance.punch_in === true && !existingAttendance.punch_out_time) {
                     // Create a punch-out record
                     existingAttendance.punch_out_time = time;
-                    existingAttendance.punch_in = false; // Mark as punch-out
-                    existingAttendance.wifi_ip = wifi_ip; // Update IP address
+                    existingAttendance.punch_in = false; 
+                    existingAttendance.wifi_ip = wifi_ip;
                     await existingAttendance.save();
                     return res.status(200).json({ statusCode: 200, result: true, message: "Punch-out recorded successfully", attendance: existingAttendance });
                 } else {
@@ -50,12 +50,12 @@ const recordAttendance = async (req, res) => {
                 return res.status(400).json({ statusCode: 400, result: false, message: "Attendance already recorded for the day." });
             }
         } else {
-            // If no attendance record exists, it is the first scan of the day, so we record punch-in
+           
             const punchIn = new Attendance({
                 emp_id,
                 date,
-                punch_in_time: time,  // Store the punch-in time
-                punch_in: true, // Mark as punch-in
+                punch_in_time: time,  
+                punch_in: true, 
                 wifi_ip,
             });
 
