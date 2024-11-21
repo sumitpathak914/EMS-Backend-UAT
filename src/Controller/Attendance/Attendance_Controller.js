@@ -7,8 +7,8 @@ const recordAttendance = async (req, res) => {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
 
 
-        const Store_wifi_ip_1 = "192.168.1.22";
-        const Store_wifi_ip_2 = "192.168.1.13";
+        const Store_wifi_ip_1 = "TechMET Solutions";
+        const Store_wifi_ip_2 = "TechMET Solutions 5G";
         const employee = await Employee.findOne({ empID: emp_id });
         if (QrMsg !== "Attendance") {
             return res.status(404).json({ statusCode: 404, result: false, message: "QR Code is not Match" });

@@ -15,7 +15,6 @@ app.use(cors());
 app.use('/Auth/api', Auth_Router);
 app.use('/api/Emp', Emp_router);
 app.use('/uploads', express.static('uploads'));
-
 app.get('/', (req, res) => {
     res.send('Server is running!');
 });
