@@ -7,7 +7,7 @@ const recordAttendance = async (req, res) => {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
 
 
-        const Store_wifi_ip_1 = "192.168.1.21";
+        const Store_wifi_ip_1 = "103.178.126.61";
         const Store_wifi_ip_2 = "192.168.1.21";
         const employee = await Employee.findOne({ empID: emp_id });
         if (QrMsg !== "Attendance") {
