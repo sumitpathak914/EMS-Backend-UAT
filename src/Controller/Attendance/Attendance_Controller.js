@@ -1,7 +1,7 @@
 const Employee = require('../../Model/AuthModel/EMP_AuthModel');
 const Attendance = require("../../Model/AttendanceModel/Attendance_model");
 
-// Helper function to initialize blank attendance records
+// Helper function to initialize or update daily attendance records
 const initializeDailyRecords = async (date) => {
     try {
         // Fetch all employees
@@ -10,12 +10,12 @@ const initializeDailyRecords = async (date) => {
         for (const employee of employees) {
             const emp_id = employee.empID;
 
-            // Check if the employee already has attendance for the current date
-            const existingAttendance = await Attendance.findOne({ emp_id });
+            // Find existing attendance record for the employee
+            let existingAttendance = await Attendance.findOne({ emp_id });
 
             if (!existingAttendance) {
-                // If the employee has no attendance records, create one
-                const newAttendance = new Attendance({
+                // If the employee has no attendance records, create a new entry
+                existingAttendance = new Attendance({
                     emp_id,
                     records: [
                         {
@@ -27,13 +27,13 @@ const initializeDailyRecords = async (date) => {
                         }
                     ]
                 });
-                await newAttendance.save();
+                await existingAttendance.save();
             } else {
-                // If attendance exists, check if there's a record for the current date
+                // If attendance exists, find the record for the current date
                 const recordForToday = existingAttendance.records.find(record => record.date === date);
 
                 if (!recordForToday) {
-                    // Add a blank record for the current date
+                    // If there's no record for the current date, add a blank record
                     existingAttendance.records.push({
                         date,
                         punch_in_time: null,
@@ -42,11 +42,16 @@ const initializeDailyRecords = async (date) => {
                         wifi_ip: null
                     });
                     await existingAttendance.save();
+                } else if (!recordForToday.punch_in_time || !recordForToday.punch_out_time) {
+                    // If the record exists but punch_in_time or punch_out_time is null, update it
+                    recordForToday.punch_in_time = recordForToday.punch_in_time || null; // Ensure punch_in_time is set if not already
+                    recordForToday.punch_out_time = recordForToday.punch_out_time || null; // Ensure punch_out_time is set if not already
+                    await existingAttendance.save();
                 }
             }
         }
     } catch (error) {
-        console.error("Error initializing daily records:", error);
+        console.error("Error initializing or updating daily records:", error);
     }
 };
 
@@ -54,7 +59,6 @@ const initializeDailyRecords = async (date) => {
 const recordAttendance = async (req, res) => {
     try {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
-
         const Store_wifi_ip_1 = "103.178.126.61";
 
         // Validate QR code
@@ -85,27 +89,79 @@ const recordAttendance = async (req, res) => {
             });
         }
 
-        // Initialize blank records for the day
+        // Initialize or update records for the day
         await initializeDailyRecords(date);
 
         // Fetch attendance record for the employee
         const existingAttendance = await Attendance.findOne({ emp_id });
 
+        if (!existingAttendance) {
+            return res.status(404).json({
+                statusCode: 404,
+                result: false,
+                message: "Attendance record not found for the given employee."
+            });
+        }
+
         // Find today's attendance record
         const todayRecord = existingAttendance.records.find(record => record.date === date);
 
+        if (!todayRecord) {
+            return res.status(404).json({
+                statusCode: 404,
+                result: false,
+                message: "No attendance record found for today."
+            });
+        }
+
         const currentTime = new Date(time);
         const hour = currentTime.getHours();
+        const minute = currentTime.getMinutes();
 
         console.log("Current time:", currentTime);
 
         if (todayRecord) {
-            // Handle Punch-Out
-            if (hour >= 13) {
-                if (todayRecord.punch_in && !todayRecord.punch_out_time) {
+            if (!todayRecord.punch_in_time) {
+                // Handle the scenario where the punch-in has not occurred yet
+                todayRecord.punch_in_time = time;
+                todayRecord.punch_in = true;
+                todayRecord.wifi_ip = wifi_ip;
+
+                // Check if the punch-in is after 9 AM and set status accordingly
+                const punchInTime = new Date(todayRecord.punch_in_time);
+                if (punchInTime.getHours() >= 9) {
+                    todayRecord.status = 'Late';
+                } else {
+                    todayRecord.status = 'Present';
+                }
+
+                await existingAttendance.save();
+                return res.status(200).json({
+                    statusCode: 200,
+                    result: true,
+                    message: "Punch-in recorded successfully",
+                    attendance: existingAttendance
+                });
+            } else if (todayRecord.punch_in_time && !todayRecord.punch_out_time) {
+                // Handle punch-out
+                if (hour >= 13) {
                     todayRecord.punch_out_time = time;
-                    todayRecord.punch_in = false;
+                    todayRecord.punch_in = false; // Set to false when punch-out occurs
                     todayRecord.wifi_ip = wifi_ip;
+
+                    // Calculate and update the status based on the punch-in and punch-out times
+                    const punchInTime = new Date(todayRecord.punch_in_time);
+                    const punchOutTime = new Date(todayRecord.punch_out_time);
+                    const timeDifference = (punchOutTime - punchInTime) / (1000 * 60 * 60); // Time difference in hours
+
+                    if (timeDifference < 4) {
+                        todayRecord.status = 'Absent';
+                    } else if (timeDifference >= 4 && timeDifference < 8) {
+                        todayRecord.status = 'Half Day';
+                    } else if (timeDifference >= 8) {
+                        todayRecord.status = 'Full Day';
+                    }
+
                     await existingAttendance.save();
                     return res.status(200).json({
                         statusCode: 200,
@@ -117,28 +173,17 @@ const recordAttendance = async (req, res) => {
                     return res.status(400).json({
                         statusCode: 400,
                         result: false,
-                        message: "You must punch-in before punching out."
+                        message: "Punch-out can only be recorded after 1 PM."
                     });
                 }
-            } else {
+            } else if (todayRecord.punch_in_time && todayRecord.punch_out_time) {
+                // If both punch-in and punch-out have already been recorded
                 return res.status(400).json({
                     statusCode: 400,
                     result: false,
-                    message: "Attendance already recorded for the day."
+                    message: "Attendance for today has already been recorded."
                 });
             }
-        } else {
-            // Handle Punch-In
-            todayRecord.punch_in_time = time;
-            todayRecord.punch_in = true;
-            todayRecord.wifi_ip = wifi_ip;
-            await existingAttendance.save();
-            return res.status(200).json({
-                statusCode: 200,
-                result: true,
-                message: `Punch-in recorded successfully. WiFi IP: ${wifi_ip}`,
-                attendance: existingAttendance
-            });
         }
     } catch (error) {
         console.error(error);
@@ -150,6 +195,10 @@ const recordAttendance = async (req, res) => {
         });
     }
 };
+
+
+
+
 
 const getEmployeeAttendance = async (req, res) => {
     try {
@@ -195,4 +244,4 @@ const getEmployeeAttendance = async (req, res) => {
     }
 };
 
-module.exports = { recordAttendance, getEmployeeAttendance,initializeDailyRecords };
+module.exports = { recordAttendance, getEmployeeAttendance, initializeDailyRecords };

@@ -5,7 +5,8 @@ const attendanceRecordSchema = new mongoose.Schema({
     punch_in_time: { type: String },
     punch_out_time: { type: String },
     punch_in: { type: Boolean, default: false },
-    wifi_ip: { type: String }
+    wifi_ip: { type: String },
+    status: { type: String } // New field for attendance status
 });
 
 const attendanceSchema = new mongoose.Schema({
