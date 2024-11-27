@@ -1,6 +1,55 @@
 const Employee = require('../../Model/AuthModel/EMP_AuthModel');
 const Attendance = require("../../Model/AttendanceModel/Attendance_model");
 
+// Helper function to initialize blank attendance records
+const initializeDailyRecords = async (date) => {
+    try {
+        // Fetch all employees
+        const employees = await Employee.find();
+
+        for (const employee of employees) {
+            const emp_id = employee.empID;
+
+            // Check if the employee already has attendance for the current date
+            const existingAttendance = await Attendance.findOne({ emp_id });
+
+            if (!existingAttendance) {
+                // If the employee has no attendance records, create one
+                const newAttendance = new Attendance({
+                    emp_id,
+                    records: [
+                        {
+                            date,
+                            punch_in_time: null,
+                            punch_out_time: null,
+                            punch_in: false,
+                            wifi_ip: null
+                        }
+                    ]
+                });
+                await newAttendance.save();
+            } else {
+                // If attendance exists, check if there's a record for the current date
+                const recordForToday = existingAttendance.records.find(record => record.date === date);
+
+                if (!recordForToday) {
+                    // Add a blank record for the current date
+                    existingAttendance.records.push({
+                        date,
+                        punch_in_time: null,
+                        punch_out_time: null,
+                        punch_in: false,
+                        wifi_ip: null
+                    });
+                    await existingAttendance.save();
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error initializing daily records:", error);
+    }
+};
+
 // Record Attendance (Punch-In or Punch-Out)
 const recordAttendance = async (req, res) => {
     try {
@@ -36,47 +85,27 @@ const recordAttendance = async (req, res) => {
             });
         }
 
+        // Initialize blank records for the day
+        await initializeDailyRecords(date);
+
         // Fetch attendance record for the employee
         const existingAttendance = await Attendance.findOne({ emp_id });
+
+        // Find today's attendance record
+        const todayRecord = existingAttendance.records.find(record => record.date === date);
 
         const currentTime = new Date(time);
         const hour = currentTime.getHours();
 
         console.log("Current time:", currentTime);
 
-        // Initialize employee attendance array if it doesn't exist
-        if (!existingAttendance) {
-            const newAttendance = new Attendance({
-                emp_id,
-                records: [
-                    {
-                        date,
-                        punch_in_time: time,
-                        punch_in: true,
-                        wifi_ip
-                    }
-                ]
-            });
-
-            await newAttendance.save();
-            return res.status(200).json({
-                statusCode: 200,
-                result: true,
-                message: `Punch-in recorded successfully. WiFi IP: ${wifi_ip}`,
-                attendance: newAttendance
-            });
-        }
-
-        // Check if attendance for the specific date already exists
-        const attendanceForDate = existingAttendance.records.find(record => record.date === date);
-
-        if (attendanceForDate) {
-            // Handle punch-out logic if after 1 PM
+        if (todayRecord) {
+            // Handle Punch-Out
             if (hour >= 13) {
-                if (attendanceForDate.punch_in && !attendanceForDate.punch_out_time) {
-                    attendanceForDate.punch_out_time = time;
-                    attendanceForDate.punch_in = false;
-                    attendanceForDate.wifi_ip = wifi_ip;
+                if (todayRecord.punch_in && !todayRecord.punch_out_time) {
+                    todayRecord.punch_out_time = time;
+                    todayRecord.punch_in = false;
+                    todayRecord.wifi_ip = wifi_ip;
                     await existingAttendance.save();
                     return res.status(200).json({
                         statusCode: 200,
@@ -95,17 +124,14 @@ const recordAttendance = async (req, res) => {
                 return res.status(400).json({
                     statusCode: 400,
                     result: false,
-                    message: `Attendance already recorded for the day. WiFi IP: ${wifi_ip}`
+                    message: "Attendance already recorded for the day."
                 });
             }
         } else {
-            // Add new attendance record for the date
-            existingAttendance.records.push({
-                date,
-                punch_in_time: time,
-                punch_in: true,
-                wifi_ip
-            });
+            // Handle Punch-In
+            todayRecord.punch_in_time = time;
+            todayRecord.punch_in = true;
+            todayRecord.wifi_ip = wifi_ip;
             await existingAttendance.save();
             return res.status(200).json({
                 statusCode: 200,
@@ -125,4 +151,48 @@ const recordAttendance = async (req, res) => {
     }
 };
 
-module.exports = { recordAttendance };
+const getEmployeeAttendance = async (req, res) => {
+    try {
+        const { emp_id } = req.body;
+
+        // Validate if emp_id is provided
+        if (!emp_id) {
+            return res.status(400).json({
+                statusCode: 400,
+                result: false,
+                message: "Employee ID is required"
+            });
+        }
+
+        // Find attendance for the given emp_id
+        const attendance = await Attendance.findOne({ emp_id });
+
+        if (!attendance) {
+            return res.status(404).json({
+                statusCode: 404,
+                result: false,
+                message: "Attendance records not found for the given employee ID"
+            });
+        }
+
+        // Sort records by date in descending order (most recent first)
+        const sortedRecords = attendance.records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        res.status(200).json({
+            statusCode: 200,
+            result: true,
+            message: "Attendance records fetched successfully",
+            records: sortedRecords
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            statusCode: 500,
+            result: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+module.exports = { recordAttendance, getEmployeeAttendance,initializeDailyRecords };

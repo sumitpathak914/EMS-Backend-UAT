@@ -18,7 +18,8 @@ app.use('/uploads', express.static('uploads'));
 app.get('/', (req, res) => {
     res.send('Server is running!');
 });
-
+// Import the scheduler
+require('./src/Schedular/dailyAttendanceScheduler');
 // Database connection (Make sure this runs only once per function execution)
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log("MongoDB Connected..."))
