@@ -47,7 +47,7 @@ const recordAttendance = async (req, res) => {
                     return res.status(400).json({ statusCode: 400, result: false, message: "You must punch-in before punching out." });
                 }
             } else {
-                return res.status(400).json({ statusCode: 400, result: false, message: "Attendance already recorded for the day." });
+                return res.status(400).json({ statusCode: 400, result: false, message: `Attendance already recorded for the day.${wifi_ip}` });
             }
         } else {
 
@@ -60,7 +60,7 @@ const recordAttendance = async (req, res) => {
             });
 
             await punchIn.save();
-            return res.status(200).json({ statusCode: 200, result: true, message: "Punch-in recorded successfully", attendance: punchIn });
+            return res.status(200).json({ statusCode: 200, result: true, message: `Punch-in recorded successfully${wifi_ip}`, attendance: punchIn });
         }
     } catch (error) {
         console.error(error);
