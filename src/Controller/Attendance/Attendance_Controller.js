@@ -7,8 +7,8 @@ const recordAttendance = async (req, res) => {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
 
 
-        const Store_wifi_ip_1 = "TechMET Solutions";
-        const Store_wifi_ip_2 = "TechMET Solutions 5G";
+        const Store_wifi_ip_1 = "192.168.1.21";
+        const Store_wifi_ip_2 = "192.168.1.21";
         const employee = await Employee.findOne({ empID: emp_id });
         if (QrMsg !== "Attendance") {
             return res.status(404).json({ statusCode: 404, result: false, message: "QR Code is not Match" });
@@ -39,7 +39,7 @@ const recordAttendance = async (req, res) => {
                 if (existingAttendance.punch_in === true && !existingAttendance.punch_out_time) {
                     // Create a punch-out record
                     existingAttendance.punch_out_time = time;
-                    existingAttendance.punch_in = false; 
+                    existingAttendance.punch_in = false;
                     existingAttendance.wifi_ip = wifi_ip;
                     await existingAttendance.save();
                     return res.status(200).json({ statusCode: 200, result: true, message: "Punch-out recorded successfully", attendance: existingAttendance });
@@ -50,12 +50,12 @@ const recordAttendance = async (req, res) => {
                 return res.status(400).json({ statusCode: 400, result: false, message: "Attendance already recorded for the day." });
             }
         } else {
-           
+
             const punchIn = new Attendance({
                 emp_id,
                 date,
-                punch_in_time: time,  
-                punch_in: true, 
+                punch_in_time: time,
+                punch_in: true,
                 wifi_ip,
             });
 
