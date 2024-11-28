@@ -155,7 +155,12 @@ const recordAttendance = async (req, res) => {
                     const timeDifference = (punchOutTime - punchInTime) / (1000 * 60 * 60); // Time difference in hours
 
                     if (timeDifference < 4) {
-                        todayRecord.status = 'Absent';
+                        return res.status(400).json({
+                            statusCode: 400,
+                            result: false,
+                            message: "Punch-out can only be recorded after Complete 4 Hr."
+                        });
+                        // todayRecord.status = 'Absent';
                     } else if (timeDifference >= 4 && timeDifference < 8) {
                         todayRecord.status = 'Half Day';
                     } else if (timeDifference >= 8) {
