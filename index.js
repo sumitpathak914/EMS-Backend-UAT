@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const Auth_Router = require('./src/Route/AuthRoute'); // Adjust path based on structure
 const Emp_router = require('./src/Route/Employe_Route');
 const Work_Report_router = require('./src/Route/WorkReportRoute');
+const leaveRouter = require('./src/Route/LeaveRoute');
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(cors());
 app.use('/Auth/api', Auth_Router);
 app.use('/api/Emp', Emp_router);
 app.use('/api/work-reports', Work_Report_router);
+app.use('/api/leave', leaveRouter);
 app.use('/uploads', express.static('uploads'));
 app.get('/', (req, res) => {
     res.send('Server is running!');
