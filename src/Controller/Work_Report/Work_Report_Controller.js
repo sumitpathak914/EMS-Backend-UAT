@@ -22,7 +22,7 @@ exports.storeWorkReport = async (req, res) => {
 
         // Normalize the date from the incoming data
         const normalizedDate = new Date(reportData[0].todayDate);
-       
+
 
         // Check if the report for today already exists for the employee
         let workReport = await WorkReport.findOne({ emp_id });
@@ -83,7 +83,7 @@ exports.getAllWorkReports = async (req, res) => {
         const workReport = await WorkReport.findOne({ emp_id }).sort({ 'reports.todayDate': -1 });
 
         if (!workReport) {
-            return res.status(404).json({ message: 'No work reports found for the given employee ID' });
+            return res.status(404).json({ status: false, statusCode: 404, message: 'No work reports found for the given employee ID', data:[] });
         }
 
         // Send the sorted reports as the response
@@ -96,6 +96,7 @@ exports.getAllWorkReports = async (req, res) => {
         res.status(500).json({
             message: 'Internal Server Error',
             error: error.message
+            , workReport: []
         });
     }
 };
