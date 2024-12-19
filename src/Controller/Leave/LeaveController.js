@@ -1,4 +1,5 @@
 const LeaveApplicationModel = require('../../Model/LeaveManagementModel/LeaveManagmentmodel');
+const mongoose = require("mongoose");
 
 exports.applyForLeave = async (req, res) => {
     try {
@@ -71,3 +72,52 @@ exports.getEmployeeData = async (req, res) => {
         res.status(500).json({ message: 'Error fetching employee data', error: error.message });
     }
 };
+exports.updateLeaveStatus = async (req, res) => {
+    try {
+        const { status, leaveId, empId } = req.body;
+       
+
+        // Validate inputs
+        if (!leaveId || !empId) {
+            return res.status(400).json({ message: 'Employee ID and Leave ID are required' });
+        }
+
+        const validStatuses = ['Approved', 'Rejected', 'Cancel', 'Pending'];
+        if (!status || !validStatuses.includes(status)) {
+            return res.status(400).json({ message: `Invalid status. Valid statuses are: ${validStatuses.join(', ')}` });
+        }
+
+        // Validate leaveId format
+        if (!mongoose.Types.ObjectId.isValid(leaveId)) {
+            return res.status(400).json({ message: 'Invalid Leave ID format' });
+        }
+
+        // Find and update the leave application in the nested array
+        const result = await LeaveApplicationModel.findOneAndUpdate(
+            {
+                empId: empId, // Match the employee ID
+                'leaveApplications._id': leaveId, // Match the nested leave ID
+            },
+            {
+                $set: { 'leaveApplications.$.status': status }, // Update the status of the matched leave application
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!result) {
+            return res.status(404).json({ statusCode: 404, result: false, message: 'Leave application not found', data: [] });
+        }
+
+        // Respond with success
+        return res.status(200).json({
+            statusCode: 200,
+            result: true,
+            message: `Leave status updated to ${status} successfully`,
+            data: result,
+        });
+    } catch (error) {
+        console.error('Error updating leave status:', error); // Log the complete error object
+        res.status(500).json({ message: 'Error updating leave status', error: error.message });
+    }
+};
+

@@ -13,6 +13,7 @@ const getAllEmployees = async (req, res) => {
         // Return the list of employees
         res.status(200).json({
             statusCode: 200,
+            result:true,
             message: 'Employees fetched successfully.',
             data: employees,
         });
