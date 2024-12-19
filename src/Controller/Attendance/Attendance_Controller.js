@@ -60,7 +60,7 @@ const recordAttendance = async (req, res) => {
     try {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
         const Store_wifi_ip_1 = "103.178.126.61";
-
+        const Store_wifi_ip_2 = "103.173.240.192";
         // Validate QR code
         if (QrMsg !== "Attendance") {
             return res.status(404).json({
@@ -81,7 +81,7 @@ const recordAttendance = async (req, res) => {
         }
 
         // Check WiFi IP address
-        if (wifi_ip !== Store_wifi_ip_1) {
+        if (wifi_ip !== Store_wifi_ip_1 && wifi_ip !== Store_wifi_ip_2 ) {
             return res.status(400).json({
                 statusCode: 400,
                 result: false,
@@ -161,9 +161,9 @@ const recordAttendance = async (req, res) => {
                             message: "Punch-out can only be recorded after Complete 4 Hr."
                         });
                         // todayRecord.status = 'Absent';
-                    } else if (timeDifference >= 4 && timeDifference < 8) {
+                    } else if (timeDifference >= 4 && timeDifference < 9) {
                         todayRecord.status = 'Half Day';
-                    } else if (timeDifference >= 8) {
+                    } else if (timeDifference >= 9) {
                         todayRecord.status = 'Full Day';
                     }
 
@@ -200,9 +200,6 @@ const recordAttendance = async (req, res) => {
         });
     }
 };
-
-
-
 
 
 const getEmployeeAttendance = async (req, res) => {
