@@ -60,7 +60,7 @@ const recordAttendance = async (req, res) => {
     try {
         const { emp_id, date, time, wifi_ip, QrMsg } = req.body;
         const Store_wifi_ip_1 = "103.178.126.61";
-        const Store_wifi_ip_2 = "103.173.240.192";
+        const Store_wifi_ip_2 = "103.173.126.213"; //5G
         // Validate QR code
         if (QrMsg !== "Attendance") {
             return res.status(404).json({
