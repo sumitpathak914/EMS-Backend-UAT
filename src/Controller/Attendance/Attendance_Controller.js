@@ -246,4 +246,104 @@ const getEmployeeAttendance = async (req, res) => {
     }
 };
 
-module.exports = { recordAttendance, getEmployeeAttendance, initializeDailyRecords };
+
+const addManualAttendance = async (req, res) => {
+    try {
+        const { emp_id, date, entry_time, exit_time } = req.body;
+
+        // Validate required fields
+        if (!emp_id || !date || !entry_time || !exit_time) {
+            return res.status(400).json({
+                statusCode: 400,
+                result: false,
+                message: "Employee ID, date, entry time, and exit time are required"
+            });
+        }
+
+        // Find employee
+        const employee = await Employee.findOne({ empID: emp_id });
+        if (!employee) {
+            return res.status(404).json({
+                statusCode: 404,
+                result: false,
+                message: "Employee not found"
+            });
+        }
+
+        // Fetch or create attendance record
+        let attendance = await Attendance.findOne({ emp_id });
+
+        if (!attendance) {
+            attendance = new Attendance({
+                emp_id,
+                records: []
+            });
+        }
+
+        // Check if the date already exists in records
+        let recordForDate = attendance.records.find(record => record.date === date);
+
+        // Parse date and time correctly
+        const punchInTime = new Date(`${date}T${entry_time.split('T')[1]}`);
+        const punchOutTime = new Date(`${date}T${exit_time.split('T')[1]}`);
+        const timeDifference = (punchOutTime - punchInTime) / (1000 * 60 * 60); // Hours
+
+        // Define the expected entry time for lateness check
+        const expectedEntryTime = new Date(`${date}T09:00:00`); // Change as per your standard time
+
+        let status = 'Absent';
+        let isLate = false;
+
+        if (punchInTime > expectedEntryTime) {
+            isLate = true;
+        }
+
+        if (timeDifference >= 4 && timeDifference < 9 && timeDifference < 5) {
+            status = isLate ? 'Half Day (Late)' : 'Half Day';
+        } else if (timeDifference >= 9) {
+            status = isLate ? 'Full Day (Late)' : 'Full Day';
+        }
+
+        if (recordForDate) {
+            // Update existing record
+            recordForDate.punch_in_time = entry_time;
+            recordForDate.punch_out_time = exit_time;
+            recordForDate.punch_in = true;
+            recordForDate.wifi_ip = null;
+            recordForDate.status = status;
+        } else {
+            // Add new record for the date
+            attendance.records.push({
+                date,
+                punch_in_time: entry_time,
+                punch_out_time: exit_time,
+                punch_in: true,
+                wifi_ip: null,
+                status
+            });
+        }
+
+        await attendance.save();
+
+        return res.status(200).json({
+            statusCode: 200,
+            result: true,
+            message: "Attendance record added/updated successfully",
+            attendance
+        });
+
+    } catch (error) {
+        console.error("Error adding manual attendance:", error);
+        res.status(500).json({
+            statusCode: 500,
+            result: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+
+
+
+module.exports = { recordAttendance, getEmployeeAttendance, initializeDailyRecords, addManualAttendance };

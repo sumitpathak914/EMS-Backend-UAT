@@ -6,4 +6,5 @@ leaveRouter.post('/apply', leaveController.applyForLeave);
 leaveRouter.get('/employee/:empId', leaveController.getEmployeeData);
 
 leaveRouter.post('/LeaveStatus_Update', leaveController.updateLeaveStatus);
+
 module.exports = leaveRouter;
